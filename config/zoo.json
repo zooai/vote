@@ -1,0 +1,39 @@
+{
+  "brand": "Zoo",
+  "domain": "vote.zoo.network",
+  "networks": {
+    "mainnet": {
+      "chainId": 200200,
+      "rpcUrl": "https://api.zoo.network/ext/bc/C/rpc",
+      "explorer": "https://explorer.zoo.network",
+      "safeSingleton": null,
+      "safeFactory": null,
+      "moduleGovernor": null,
+      "moduleFractal": null,
+      "systemDeployer": null,
+      "governor": null
+    },
+    "testnet": {
+      "chainId": 200201,
+      "rpcUrl": "https://api.zoo-test.network/ext/bc/C/rpc",
+      "explorer": "https://explorer.zoo-test.network",
+      "safeSingleton": null,
+      "safeFactory": null,
+      "moduleGovernor": null,
+      "moduleFractal": null,
+      "systemDeployer": null,
+      "governor": null
+    }
+  },
+  "voting": {
+    "votingPeriodBlocks": 17280,
+    "votingDelayBlocks": 7200,
+    "quorumPercent": 4,
+    "executionDelaySeconds": 172800
+  },
+  "branding": {
+    "logo": "/assets/zoo-logo.svg",
+    "primaryColor": "#1a1a1a",
+    "favicon": "/assets/favicon.ico"
+  }
+}
