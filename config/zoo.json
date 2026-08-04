@@ -4,7 +4,7 @@
   "networks": {
     "mainnet": {
       "chainId": 200200,
-      "rpcUrl": "https://api.zoo.network/ext/bc/C/rpc",
+      "rpcUrl": "https://api.zoo.network/v1/bc/C/rpc",
       "explorer": "https://explorer.zoo.network",
       "safeSingleton": null,
       "safeFactory": null,
@@ -15,7 +15,7 @@
     },
     "testnet": {
       "chainId": 200201,
-      "rpcUrl": "https://api.zoo-test.network/ext/bc/C/rpc",
+      "rpcUrl": "https://api.zoo-test.network/v1/bc/C/rpc",
       "explorer": "https://explorer.zoo-test.network",
       "safeSingleton": null,
       "safeFactory": null,
