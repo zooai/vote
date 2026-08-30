@@ -1,0 +1,81 @@
+name: Image
+
+# zoo.vote.
+#
+# The interface is luxfi/vote — one app, built once per DAO with a different
+# home, rather than a fork per org that drifts. This repository is the Zoo
+# build: it checks that source out, builds it with VITE_VOTE_HOME=zoo, and
+# publishes to ghcr.io/zooai/vote.
+#
+# The image goes to Zoo's registry and never to Lux's. Each org's images live in
+# its own, so one org losing access cannot strand another's deploy.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  # The source lives elsewhere, so a commit here is not the only reason to
+  # rebuild. Daily picks up a luxfi/vote change without anyone remembering to
+  # press the button.
+  schedule:
+    - cron: '17 6 * * *'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, amd64]
+    steps:
+      - name: Check out the interface
+        uses: actions/checkout@v4
+        with:
+          repository: luxfi/vote
+          ref: main
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: |
+            network=host
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/zooai/vote
+          # No floating tag. A cluster pins a version; `latest` on a registry is
+          # a moving target that makes "what is deployed" unanswerable.
+          flavor: |
+            latest=false
+          # The sha is luxfi/vote's, because that is what was built. A tag naming
+          # this repository's sha would say nothing about the source.
+          tags: |
+            type=sha,format=short,prefix=zoo-
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            VITE_VOTE_HOME=zoo
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Say what to pin
+        run: |
+          echo "Built zoo.vote: ${{ steps.meta.outputs.tags }}"
+          echo "Pin it in the zoo-vote deploy manifest under image.tag."
+          echo "Nothing deploys until that file names this tag."
