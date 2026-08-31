@@ -17,4 +17,5 @@ Two rules the deploy depends on:
 
 Nothing deploys until a manifest names the tag.
 
-CI is Hanzo Git Actions on git.hanzo.ai, run by `act_runner`.
+CI is Hanzo Git Actions on `git.hanzo.ai`, run by `act_runner`. The workflow is
+`.hanzo/workflows/image.yml`.
