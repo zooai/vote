@@ -1,0 +1,82 @@
+name: Image
+
+# What vote.zoo.network runs is built here, from luxfi/vote.
+#
+# There is one governance interface and it is luxfi/vote. It already knows Zoo —
+# the chain, its explorer and the addresses recorded against it are venues in its
+# own roster — so a second copy of that app would be a second place for the same
+# facts to drift. This repository is the Zoo *image*, not a Zoo *app*: it checks
+# out that source and builds it with the Zoo venue selected.
+#
+# The image lives in Zoo's own registry rather than Lux's, so an org losing
+# access to one registry cannot strand the other's deploy.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    # The source is another repository, so a push here is not the only thing that
+    # can change what this builds. A weekly rebuild picks up luxfi/vote's main
+    # without anyone remembering to press the button.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: [zoo-linux-amd64]
+    steps:
+      - name: Check out the interface
+        uses: actions/checkout@v4
+        with:
+          repository: luxfi/vote
+          ref: main
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: |
+            network=host
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/zooai/vote
+          # No floating tag. A cluster pins a version; `latest` on a registry is
+          # a moving target that makes "what is deployed" unanswerable.
+          flavor: |
+            latest=false
+          tags: |
+            type=sha,format=short,prefix=zoo-
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          # The one thing that differs from the Lux image. An unknown key fails
+          # the build rather than shipping a site that opens on the wrong chain
+          # and reports real figures about somebody else's governance.
+          build-args: |
+            VITE_VOTE_HOME=zoo
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Say what to pin
+        run: |
+          echo "Built vote.zoo.network: ${{ steps.meta.outputs.tags }}"
+          echo "Pin it in zooai/universe under image.tag. Nothing deploys until that file names this tag."
