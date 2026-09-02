@@ -22,7 +22,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: [zoo-linux-amd64]
+    # zoo-build-linux-amd64, not zoo-linux-amd64: the second is not a label any
+    # runner advertises (hanzoai/.github RUNNERS.md registers the pool as
+    # {zoo,pars,zen}-build-linux-amd64), so a job asking for it queues forever
+    # while looking like CI that has not got round to it.
+    runs-on: [zoo-build-linux-amd64]
     steps:
       - name: Check out the interface
         uses: actions/checkout@v4
